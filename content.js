@@ -1,53 +1,86 @@
 let skipAdInterval = null;
-
-function skipAdsAndCloseOverlays() {
-  // Try clicking "Skip" button (skippable ads)
-  const skipBtn = document.querySelector('.ytp-ad-skip-button');
-  if (skipBtn) {
-    skipBtn.click();
-    console.log("⏭️ Clicked 'Skip Ad' button");
+function trulyClickElement(el) {
+    ['mouseover', 'mousedown', 'mouseup', 'click'].forEach(type => {
+      el.dispatchEvent(new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      }));
+    });
   }
-
-  // Close overlay banner ads
+  function clickSkipButton() {
+    const btn = document.querySelector('.ytp-ad-skip-button');
+    
+    const isVisible = (
+      btn &&
+      btn.offsetParent !== null &&
+      getComputedStyle(btn).display !== 'none' &&
+      getComputedStyle(btn).visibility !== 'hidden'
+    );
+  
+    if (isVisible) {
+      trulyClickElement(btn);
+      console.log("🧨 Dispatched full event sequence to skip button");
+    }
+  }
+  
+  
+  
+function closeOverlayAd() {
   const overlayBtn = document.querySelector('.ytp-ad-overlay-close-button');
   if (overlayBtn) {
     overlayBtn.click();
-    console.log("❌ Closed overlay ad");
+    console.log("❌ Closed overlay ad.");
   }
 }
 
 function forceSkipNonSkippableAd() {
-  const video = document.querySelector('video');
-  const adContainer = document.querySelector('.ad-showing');
-
-  if (adContainer && video && isFinite(video.duration) && video.duration > 0) {
-    if (video.currentTime < video.duration - 0.1) {
+    const adContainer = document.querySelector('.ad-showing');
+    const video = document.querySelector('video');
+  
+    if (
+      adContainer &&
+      video &&
+      typeof video.duration === 'number' &&
+      isFinite(video.duration) &&
+      video.duration > 0
+    ) if (
+      video &&
+      typeof video.duration === "number" &&
+      isFinite(video.duration) &&
+      video.duration > 0
+    ) {
       video.currentTime = video.duration;
-      console.log("⏩ Force-seeking to end of non-skippable ad");
+      console.log("⏩ Skipped to end of video.");
     }
+    
   }
-}
+  
 
 function monitorAdStatus() {
   const isAdPlaying = document.querySelector('.ad-showing');
 
   if (isAdPlaying && !skipAdInterval) {
-    console.log("🎯 Ad detected, starting force-skip loop...");
+    console.log("🎯 Ad detected – starting force-skip loop");
     skipAdInterval = setInterval(forceSkipNonSkippableAd, 300);
   } else if (!isAdPlaying && skipAdInterval) {
     clearInterval(skipAdInterval);
     skipAdInterval = null;
-    console.log("✅ Ad finished, cleared force-skip loop.");
+    console.log("✅ Ad ended – cleared skip loop");
   }
 }
 
-function startAdSkipper() {
-  skipAdsAndCloseOverlays();
+function handleAds() {
+  clickSkipButton();
+  closeOverlayAd();
   monitorAdStatus();
+}
+
+function startAdSkipper() {
+  handleAds();
 
   const observer = new MutationObserver(() => {
-    skipAdsAndCloseOverlays();
-    monitorAdStatus();
+    handleAds();
   });
 
   observer.observe(document.body, {
@@ -55,13 +88,9 @@ function startAdSkipper() {
     subtree: true,
   });
 
-  setInterval(() => {
-    skipAdsAndCloseOverlays();
-    monitorAdStatus();
-  }, 500);
+  setInterval(handleAds, 500);
 }
 
-// Ensure DOM is ready
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
   startAdSkipper();
 } else {
