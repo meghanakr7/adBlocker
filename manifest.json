@@ -1,0 +1,37 @@
+{
+    "manifest_version": 3,
+    "name": "My YouTube Ad Blocker",
+    "version": "1.0",
+    "description": "Blocks and skips YouTube ads locally.",
+    "permissions": [
+      "declarativeNetRequest",
+      "declarativeNetRequestWithHostAccess",
+      "scripting",
+      "tabs"
+    ],
+    "host_permissions": [
+      "*://*.youtube.com/*",
+      "*://*.googlevideo.com/*",
+      "*://*.doubleclick.net/*",
+      "*://*.googlesyndication.com/*"
+    ],
+    "action": {
+      "default_title": "YouTube Ad Blocker"
+    },
+    "declarative_net_request": {
+      "rule_resources": [
+        {
+          "id": "block-ads",
+          "enabled": true,
+          "path": "rules.json"
+        }
+      ]
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://www.youtube.com/*"],
+        "js": ["content.js"]
+      }
+    ]
+  }
+  
